@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Routine & Attendance Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+            --border: #e2e8f0;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: white;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 2px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo i {
+            font-size: 1.75rem;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 70px);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-light);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 0;
+            transition: transform 0.3s;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+            position: absolute;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-dark);
+            transition: background 0.2s;
+        }
+
+        .nav-item:hover {
+            background: white;
+        }
+
+        .nav-item.active {
+            background: white;
+            border-left: 3px solid var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            width: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card.success .stat-value { color: var(--success); }
+        .stat-card.danger .stat-value { color: var(--danger); }
+        .stat-card.warning .stat-value { color: var(--warning); }
+        .stat-card.primary .stat-value { color: var(--primary); }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .timetable-grid {
+            overflow-x: auto;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .schedule-cell {
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0.25rem 0;
+            cursor: move;
+            transition: transform 0.2s;
+        }
+
+        .schedule-cell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subject-physics { background: #dbeafe; border-left: 3px solid #3b82f6; }
+        .subject-math { background: #dcfce7; border-left: 3px solid #22c55e; }
+        .subject-english { background: #fef3c7; border-left: 3px solid #f59e0b; }
+        .subject-chemistry { background: #fce7f3; border-left: 3px solid #ec4899; }
+        .subject-biology { background: #e0e7ff; border-left: 3px solid #8b5cf6; }
+
+        .conflict {
+            background: #fee2e2 !important;
+            border-left: 3px solid var(--danger) !important;
+        }
+
+        .teacher-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .teacher-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .teacher-info h4 {
+            margin-bottom: 0.25rem;
+        }
+
+        .teacher-info p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .attendance-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: var(--danger);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .attendance-toggle.present {
+            background: var(--success);
+        }
+
+        .attendance-toggle::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .attendance-toggle.present::after {
+            transform: translateX(30px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: var(--bg-light);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: #dbeafe;
+        }
+
+        .notification {
+            position: fixed;
+            top: 90px;
+            right: 2rem;
+            background: white;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            z-index: 1001;
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.active {
+            display: flex;
+            animation: slideIn 0.3s;
+        }
+
+        .notification.error {
+            border-left-color: var(--danger);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .activity-feed {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .activity-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.success { background: #dcfce7; color: var(--success); }
+        .activity-icon.warning { background: #fef3c7; color: var(--warning); }
+
+        .substitute-suggestions {
+            margin-top: 1rem;
+        }
+
+        .suggestion-item {
+            background: var(--bg-light);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suggestion-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-dark);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                height: 100vh;
+                z-index: 99;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .user-profile span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>SchoolSync Pro</span>
+            </div>
+        </div>
+        <div class="user-profile">
+            <div class="user-avatar">AD</div>
+            <span>Admin User</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <nav class="sidebar" id="sidebar">
+            <div class="nav-item active" onclick="switchTab('dashboard')">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('routine')">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Routine Management</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('attendance')">
+                <i class="fas fa-user-check"></i>
+                <span>Attendance & Substitution</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('import')">
+                <i class="fas fa-file-upload"></i>
+                <span>Data Import</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('teachers')">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <span>Manage Teachers</span>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <h1 style="margin-bottom: 2rem;">Dashboard Overview</h1>
+                
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <h3>Total Teachers</h3>
+                        <div class="stat-value" id="totalTeachers">0</div>
+                        <p>Active faculty members</p>
+                    </div>
+                    <div class="stat-card success">
+                        <h3>Present Today</h3>
+                        <div class="stat-value" id="presentToday">0</div>
+                        <p>Currently available</p>
+                    </div>
+                    <div class="stat-card danger">
+                        <h3>Absent Today</h3>
+                        <div class="stat-value" id="absentToday">0</div>
+                        <p>Requires attention</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <h3>Substitutions</h3>
+                        <div class="stat-value" id="substitutions">0</div>
+                        <p>Active assignments</p>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="openModal('attendanceModal')">
+                        <i class="fas fa-check-circle"></i> Mark Attendance
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('classModal')">
+                        <i class="fas fa-plus-circle"></i> Create Routine
+                    </button>
+                    <button class="btn btn-success" onclick="detectConflicts()">
+                        <i class="fas fa-exclamation-triangle"></i> Detect Conflicts
+                    </button>
+                </div>
+
+                <h2 style="margin-bottom: 1rem;">Today's Schedule</h2>
+                <div class="timetable-grid">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Class</th>
+                                <th>Subject</th>
+                                <th>Teacher</th>
+                                <th>Room</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todaySchedule">
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2 style="margin: 2rem 0 1rem;">Recent Activity</h2>
+                <div class="activity-feed" id="activityFeed">
+                </div>
+            </div>
+
+            <!-- Routine Management Tab -->
+            <div id="routine" class="tab-content">
+                <h1 style="margin-bottom: 2rem;">Weekly Timetable</h1>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="openModal('classModal')">
+                        <i class="fas fa-plus-circle"></i> Add Class
+                    </button>
+                    <button class="btn btn-success" onclick="detectConflicts()">
+                        <i class="fas fa-exclamation-triangle"></i> Detect Conflicts
+                    </button>
+                    <button class="btn btn-primary" onclick="saveRoutine()">
+                        <i class="fas fa-save"></i> Save Routine
+                    </button>
+                </div>
+
+                <div class="timetable-grid">
+                    <table id="weeklyTimetable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Monday</th>
+                                <th>Tuesday</th>
+                                <th>Wednesday</th>
+                                <th>Thursday</th>
+                                <th>Friday</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timetableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Attendance & Substitution Tab -->
+            <div id="attendance" class="tab-content">
+                <h1 style="margin-bottom: 2rem;">Teacher Attendance</h1>
+                
+                <div class="teacher-list" id="teacherList">
+                </div>
+            </div>
+
+            <!-- Data Import Tab -->
+            <div id="import" class="tab-content">
+                <h1 style="margin-bottom: 2rem;">Import Data</h1>
+                
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                    <h3>Drag & Drop Files Here</h3>
+                    <p>or click to browse</p>
+                    <p style="color: #64748b; margin-top: 1rem;">Supported formats: Excel (.xlsx, .xls), CSV, PDF, TXT</p>
+                </div>
+                <input type="file" id="fileInput" style="display: none;" accept=".xlsx,.xls,.csv,.pdf,.txt" onchange="handleFileUpload(event)">
+
+                <div id="importPreview" style="margin-top: 2rem; display: none;">
+                    <h2>Preview</h2>
+                    <div class="timetable-grid">
+                        <table>
+                            <thead id="previewHeader"></thead>
+                            <tbody id="previewBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="action-buttons" style="margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="confirmImport()">
+                            <i class="fas fa-check"></i> Confirm Import
+                        </button>
+                        <button class="btn btn-danger" onclick="cancelImport()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manage Teachers Tab -->
+            <div id="teachers" class="tab-content">
+                <h1 style="margin-bottom: 2rem;">Manage Teachers</h1>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="openModal('addTeacherModal')">
+                        <i class="fas fa-user-plus"></i> Add New Teacher
+                    </button>
+                </div>
+
+                <div class="timetable-grid">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Branch</th>
+                                <th>Subjects</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherManagementList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Class Modal -->
+    <div class="modal" id="classModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Class to Timetable</h2>
+                <button class="close-modal" onclick="closeModal('classModal')">&times;</button>
+            </div>
+            <form onsubmit="addClass(event)">
+                <div class="form-group">
+                    <label>Day</label>
+                    <select id="classDay" required>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Time</label>
+                    <select id="classTime" required>
+                        <option value="9:00">9:00 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="12:00">12:00 PM</option>
+                        <option value="13:00">1:00 PM</option>
+                        <option value="14:00">2:00 PM</option>
+                        <option value="15:00">3:00 PM</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Class</label>
+                    <input type="text" id="className" placeholder="e.g., 10A" required>
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <select id="classSubject" required>
+                        <option value="Physics">Physics</option>
+                        <option value="Math">Math</option>
+                        <option value="English">English</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Biology">Biology</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Teacher</label>
+                    <select id="classTeacher" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Room</label>
+                    <input type="text" id="classRoom" placeholder="e.g., 301" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Add Class</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Substitute Modal -->
+    <div class="modal" id="substituteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Assign Substitute Teacher</h2>
+                <button class="close-modal" onclick="closeModal('substituteModal')">&times;</button>
+            </div>
+            <div id="substituteContent">
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Teacher Modal -->
+    <div class="modal" id="addTeacherModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Teacher</h2>
+                <button class="close-modal" onclick="closeModal('addTeacherModal')">&times;</button>
+            </div>
+            <form onsubmit="addTeacher(event)">
+                <div class="form-group">
+                    <label>Teacher Name</label>
+                    <input type="text" id="teacherName" placeholder="e.g., Dr. John Smith" required>
+                </div>
+                <div class="form-group">
+                    <label>Branch/Department</label>
+                    <select id="teacherBranch" required>
+                        <option value="Science">Science</option>
+                        <option value="Commerce">Commerce</option>
+                        <option value="Arts">Arts</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Languages">Languages</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Subjects (Hold Ctrl/Cmd to select multiple)</label>
+                    <select id="teacherSubjects" multiple required style="height: 120px;">
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Biology">Biology</option>
+                        <option value="Math">Mathematics</option>
+                        <option value="English">English</option>
+                        <option value="History">History</option>
+                        <option value="Geography">Geography</option>
+                        <option value="Accounts">Accounts</option>
+                        <option value="Economics">Economics</option>
+                        <option value="Computer Science">Computer Science</option>
+                    </select>
+                    <small style="color: #64748b; display: block; margin-top: 0.5rem;">
+                        <i class="fas fa-info-circle"></i> Hold Ctrl (Windows) or Cmd (Mac) to select multiple subjects
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-check"></i> Add Teacher
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Teacher Modal -->
+    <div class="modal" id="editTeacherModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Teacher</h2>
+                <button class="close-modal" onclick="closeModal('editTeacherModal')">&times;</button>
+            </div>
+            <form onsubmit="updateTeacher(event)">
+                <input type="hidden" id="editTeacherId">
+                <div class="form-group">
+                    <label>Teacher Name</label>
+                    <input type="text" id="editTeacherName" required>
+                </div>
+                <div class="form-group">
+                    <label>Branch/Department</label>
+                    <select id="editTeacherBranch" required>
+                        <option value="Science">Science</option>
+                        <option value="Commerce">Commerce</option>
+                        <option value="Arts">Arts</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Languages">Languages</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Subjects (Hold Ctrl/Cmd to select multiple)</label>
+                    <select id="editTeacherSubjects" multiple required style="height: 120px;">
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Biology">Biology</option>
+                        <option value="Math">Mathematics</option>
+                        <option value="English">English</option>
+                        <option value="History">History</option>
+                        <option value="Geography">Geography</option>
+                        <option value="Accounts">Accounts</option>
+                        <option value="Economics">Economics</option>
+                        <option value="Computer Science">Computer Science</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-save"></i> Update Teacher
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle" style="font-size: 1.5rem; color: var(--success);"></i>
+        <span id="notificationText"></span>
+    </div>
+
+    <script>
+        // Sample Data
+        let teachers = [
+            { id: 1, name: "Dr. Sharma", branch: "Science", subjects: ["Physics", "Math"], available: true },
+            { id: 2, name: "Mrs. Patel", branch: "Commerce", subjects: ["Accounts", "Economics"], available: true },
+            { id: 3, name: "Mr. Kumar", branch: "Science", subjects: ["Chemistry", "Biology"], available: true },
+            { id: 4, name: "Ms. Singh", branch: "Arts", subjects: ["English", "History"], available: true },
+            { id: 5, name: "Dr. Reddy", branch: "Science", subjects: ["Physics", "Math"], available: true }
+        ];
+
+        let timetable = [
+            { day: "Monday", time: "9:00", class: "10A", subject: "Physics", teacherId: 1, room: "301" },
+            { day: "Monday", time: "10:00", class: "10B", subject: "Math", teacherId: 1, room: "302" },
+            { day: "Tuesday", time: "9:00", class: "11A", subject: "Chemistry", teacherId: 3, room: "303" },
+            { day: "Wednesday", time: "11:00", class: "10A", subject: "English", teacherId: 4, room: "201" },
+            { day: "Thursday", time: "14:00", class: "12A", subject: "Biology", teacherId: 3, room: "304" }
+        ];
+
+        let attendance = {};
+        let activities = [];
+        let substitutions = [];
+
+        const timeSlots = ["9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"];
+        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            initializeAttendance();
+            updateDashboard();
+            renderTimetable();
+            renderTeacherList();
+            populateTeacherDropdown();
+            renderTodaySchedule();
+            renderActivityFeed();
+            setupDragDrop();
+        });
+
+        function loadFromStorage() {
+            const stored = localStorage.getItem('schoolData');
+            if (stored) {
+                const data = JSON.parse(stored);
+                teachers = data.teachers || teachers;
+                timetable = data.timetable || timetable;
+                attendance = data.attendance || {};
+                activities = data.activities || [];
+                substitutions = data.substitutions || [];
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('schoolData', JSON.stringify({
+                teachers, timetable, attendance, activities, substitutions
+            }));
+        }
+
+        function initializeAttendance() {
+            const today = new Date().toISOString().split('T')[0];
+            if (!attendance[today]) {
+                attendance[today] = {};
+                teachers.forEach(t => {
+                    attendance[today][t.id] = 'present';
+                    t.available = true;
+                });
+            } else {
+                teachers.forEach(t => {
+                    t.available = attendance[today][t.id] === 'present';
+                });
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+            
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
+        function updateDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayAttendance = attendance[today] || {};
+            
+            const present = Object.values(todayAttendance).filter(s => s === 'present').length;
+            const absent = teachers.length - present;
+            
+            document.getElementById('totalTeachers').textContent = teachers.length;
+            document.getElementById('presentToday').textContent = present;
+            document.getElementById('absentToday').textContent = absent;
+            document.getElementById('substitutions').textContent = substitutions.length;
+        }
+
+        function renderTimetable() {
+            const tbody = document.getElementById('timetableBody');
+            tbody.innerHTML = '';
+            
+            timeSlots.forEach(time => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><strong>${formatTime(time)}</strong></td>`;
+                
+                days.forEach(day => {
+                    const cell = document.createElement('td');
+                    cell.dataset.day = day;
+                    cell.dataset.time = time;
+                    cell.style.minHeight = '60px';
+                    
+                    const classes = timetable.filter(c => c.day === day && c.time === time);
+                    classes.forEach(cls => {
+                        const teacher = teachers.find(t => t.id === cls.teacherId);
+                        const div = document.createElement('div');
+                        div.className = `schedule-cell subject-${cls.subject.toLowerCase()}`;
+                        div.draggable = true;
+                        div.dataset.classId = timetable.indexOf(cls);
+                        div.innerHTML = `
+                            <strong>${cls.class}</strong><br>
+                            ${cls.subject}<br>
+                            <small>${teacher ? teacher.name : 'N/A'} - ${cls.room}</small>
+                        `;
+                        div.ondragstart = drag;
+                        cell.appendChild(div);
+                    });
+                    
+                    cell.ondrop = drop;
+                    cell.ondragover = allowDrop;
+                    row.appendChild(cell);
+                });
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function setupDragDrop() {
+            // Drag and drop handlers are set in renderTimetable
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("classId", ev.target.dataset.classId);
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const classId = ev.dataTransfer.getData("classId");
+            const cell = ev.target.closest('td');
+            
+            if (cell && cell.dataset.day && cell.dataset.time) {
+                timetable[classId].day = cell.dataset.day;
+                timetable[classId].time = cell.dataset.time;
+                renderTimetable();
+                saveToStorage();
+                showNotification('Class moved successfully');
+                addActivity('Class rescheduled', 'success');
+            }
+        }
+
+        function renderTeacherList() {
+            const list = document.getElementById('teacherList');
+            list.innerHTML = '';
+            
+            teachers.forEach(teacher => {
+                const card = document.createElement('div');
+                card.className = 'teacher-card';
+                card.innerHTML = `
+                    <div class="teacher-info">
+                        <h4>${teacher.name}</h4>
+                        <p>${teacher.branch} - ${teacher.subjects.join(', ')}</p>
+                    </div>
+                    <div class="attendance-toggle ${teacher.available ? 'present' : ''}" onclick="toggleAttendance(${teacher.id})"></div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function toggleAttendance(teacherId) {
+            const teacher = teachers.find(t => t.id === teacherId);
+            const today = new Date().toISOString().split('T')[0];
+            
+            teacher.available = !teacher.available;
+            attendance[today][teacherId] = teacher.available ? 'present' : 'absent';
+            
+            renderTeacherList();
+            updateDashboard();
+            saveToStorage();
+            
+            if (!teacher.available) {
+                // Teacher marked absent, find substitutes
+                findSubstitutes(teacherId);
+            } else {
+                showNotification(`${teacher.name} marked present`);
+                addActivity(`${teacher.name} marked present`, 'success');
+            }
+        }
+
+        function findSubstitutes(teacherId) {
+            const teacher = teachers.find(t => t.id === teacherId);
+            const todayClasses = getTodayClasses().filter(c => c.teacherId === teacherId);
+            
+            if (todayClasses.length === 0) {
+                showNotification(`${teacher.name} marked absent (no classes today)`);
+                addActivity(`${teacher.name} marked absent`, 'warning');
+                return;
+            }
+            
+            const suggestions = [];
+            
+            todayClasses.forEach(cls => {
+                // Layer 1: Same subject teachers
+                const sameSubject = teachers.filter(t => 
+                    t.id !== teacherId && 
+                    t.available && 
+                    t.subjects.includes(cls.subject)
+                );
+                
+                sameSubject.forEach(t => {
+                    const hasConflict = timetable.some(c => 
+                        c.teacherId === t.id && 
+                        c.day === cls.day && 
+                        c.time === cls.time
+                    );
+                    if (!hasConflict) {
+                        suggestions.push({ teacher: t, class: cls, layer: 1 });
+                    }
+                });
+                
+                // Layer 2: Available teachers in same time slot
+                const available = teachers.filter(t => 
+                    t.id !== teacherId && 
+                    t.available
+                );
+                
+                available.forEach(t => {
+                    const hasConflict = timetable.some(c => 
+                        c.teacherId === t.id && 
+                        c.day === cls.day && 
+                        c.time === cls.time
+                    );
+                    if (!hasConflict && !sameSubject.includes(t)) {
+                        suggestions.push({ teacher: t, class: cls, layer: 2 });
+                    }
+                });
+            });
+            
+            if (suggestions.length > 0) {
+                showSubstituteModal(teacher, suggestions);
+            } else {
+                showNotification(`${teacher.name} marked absent - No substitutes available`, true);
+                addActivity(`${teacher.name} marked absent - No substitute found`, 'warning');
+            }
+        }
+
+        function showSubstituteModal(absentTeacher, suggestions) {
+            const content = document.getElementById('substituteContent');
+            content.innerHTML = `
+                <p><strong>${absentTeacher.name}</strong> has been marked absent.</p>
+                <p>Classes requiring substitutes:</p>
+                <div class="substitute-suggestions">
+            `;
+            
+            const uniqueClasses = [...new Map(suggestions.map(s => [s.class.day + s.class.time, s])).values()];
+            
+            uniqueClasses.forEach(item => {
+                const classTeachers = suggestions.filter(s => 
+                    s.class.day === item.class.day && 
+                    s.class.time === item.class.time
+                );
+                
+                content.innerHTML += `
+                    <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                        <h4>${item.class.day} ${formatTime(item.class.time)} - ${item.class.class} (${item.class.subject})</h4>
+                        <div style="margin-top: 0.5rem;">
+                `;
+                
+                classTeachers.forEach(sug => {
+                    content.innerHTML += `
+                        <div class="suggestion-item">
+                            <div>
+                                <strong>${sug.teacher.name}</strong>
+                                <p style="font-size: 0.875rem; color: #64748b; margin: 0;">${sug.teacher.subjects.join(', ')}</p>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span class="suggestion-badge">${sug.layer === 1 ? 'Same Subject' : 'Available'}</span>
+                                <button class="btn btn-primary" style="padding: 0.5rem 1rem;" onclick="assignSubstitute(${sug.teacher.id}, ${item.class.day}, '${item.class.time}', ${absentTeacher.id})">
+                                    Assign
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                content.innerHTML += '</div></div>';
+            });
+            
+            content.innerHTML += '</div>';
+            openModal('substituteModal');
+        }
+
+        function assignSubstitute(substituteId, day, time, absentTeacherId) {
+            const substitute = teachers.find(t => t.id === substituteId);
+            const absentTeacher = teachers.find(t => t.id === absentTeacherId);
+            
+            const classIndex = timetable.findIndex(c => 
+                c.teacherId === absentTeacherId && 
+                c.day === day && 
+                c.time === time
+            );
+            
+            if (classIndex !== -1) {
+                timetable[classIndex].teacherId = substituteId;
+                substitutions.push({
+                    original: absentTeacherId,
+                    substitute: substituteId,
+                    class: timetable[classIndex],
+                    date: new Date().toISOString().split('T')[0]
+                });
+                
+                renderTimetable();
+                renderTodaySchedule();
+                updateDashboard();
+                saveToStorage();
+                closeModal('substituteModal');
+                showNotification(`${substitute.name} assigned as substitute`);
+                addActivity(`${substitute.name} substituting for ${absentTeacher.name}`, 'success');
+            }
+        }
+
+        function getTodayClasses() {
+            const today = new Date().getDay();
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const todayName = dayNames[today];
+            return timetable.filter(c => c.day === todayName);
+        }
+
+        function renderTodaySchedule() {
+            const tbody = document.getElementById('todaySchedule');
+            const todayClasses = getTodayClasses().sort((a, b) => a.time.localeCompare(b.time));
+            
+            tbody.innerHTML = '';
+            if (todayClasses.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">No classes scheduled for today</td></tr>';
+                return;
+            }
+            
+            todayClasses.forEach(cls => {
+                const teacher = teachers.find(t => t.id === cls.teacherId);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatTime(cls.time)}</td>
+                    <td>${cls.class}</td>
+                    <td>${cls.subject}</td>
+                    <td>${teacher ? teacher.name : 'N/A'}</td>
+                    <td>${cls.room}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function addClass(event) {
+            event.preventDefault();
+            
+            const newClass = {
+                day: document.getElementById('classDay').value,
+                time: document.getElementById('classTime').value,
+                class: document.getElementById('className').value,
+                subject: document.getElementById('classSubject').value,
+                teacherId: parseInt(document.getElementById('classTeacher').value),
+                room: document.getElementById('classRoom').value
+            };
+            
+            timetable.push(newClass);
+            renderTimetable();
+            renderTodaySchedule();
+            saveToStorage();
+            closeModal('classModal');
+            showNotification('Class added successfully');
+            addActivity(`New class added: ${newClass.class} - ${newClass.subject}`, 'success');
+            event.target.reset();
+        }
+
+        function populateTeacherDropdown() {
+            const select = document.getElementById('classTeacher');
+            select.innerHTML = '';
+            teachers.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher.id;
+                option.textContent = `${teacher.name} (${teacher.subjects.join(', ')})`;
+                select.appendChild(option);
+            });
+        }
+
+        function detectConflicts() {
+            const conflicts = [];
+            
+            timetable.forEach((cls, index) => {
+                // Check for teacher conflicts
+                const teacherConflicts = timetable.filter((c, i) => 
+                    i !== index && 
+                    c.teacherId === cls.teacherId && 
+                    c.day === cls.day && 
+                    c.time === cls.time
+                );
+                
+                if (teacherConflicts.length > 0) {
+                    conflicts.push({
+                        type: 'teacher',
+                        class1: cls,
+                        class2: teacherConflicts[0],
+                        teacher: teachers.find(t => t.id === cls.teacherId)
+                    });
+                }
+                
+                // Check for room conflicts
+                const roomConflicts = timetable.filter((c, i) => 
+                    i !== index && 
+                    c.room === cls.room && 
+                    c.day === cls.day && 
+                    c.time === cls.time
+                );
+                
+                if (roomConflicts.length > 0) {
+                    conflicts.push({
+                        type: 'room',
+                        class1: cls,
+                        class2: roomConflicts[0]
+                    });
+                }
+            });
+            
+            // Highlight conflicts
+            document.querySelectorAll('.schedule-cell').forEach(cell => {
+                cell.classList.remove('conflict');
+            });
+            
+            conflicts.forEach(conflict => {
+                const cells = document.querySelectorAll(`[data-class-id]`);
+                cells.forEach(cell => {
+                    const classId = parseInt(cell.dataset.classId);
+                    const cls = timetable[classId];
+                    if (cls === conflict.class1 || cls === conflict.class2) {
+                        cell.classList.add('conflict');
+                    }
+                });
+            });
+            
+            if (conflicts.length > 0) {
+                showNotification(`${conflicts.length} conflict(s) detected and highlighted`, true);
+            } else {
+                showNotification('No conflicts found');
+            }
+        }
+
+        function saveRoutine() {
+            saveToStorage();
+            showNotification('Routine saved successfully');
+            addActivity('Timetable saved', 'success');
+        }
+
+        function renderActivityFeed() {
+            const feed = document.getElementById('activityFeed');
+            if (activities.length === 0) {
+                feed.innerHTML = '<p style="text-align: center; color: #64748b; padding: 2rem;">No recent activity</p>';
+                return;
+            }
+            
+            feed.innerHTML = '';
+            activities.slice(-5).reverse().forEach(activity => {
+                const item = document.createElement('div');
+                item.className = 'activity-item';
+                item.innerHTML = `
+                    <div class="activity-icon ${activity.type}">
+                        <i class="fas ${activity.type === 'success' ? 'fa-check' : 'fa-exclamation'}"></i>
+                    </div>
+                    <div>
+                        <p>${activity.text}</p>
+                        <small style="color: #64748b;">${formatDateTime(activity.time)}</small>
+                    </div>
+                `;
+                feed.appendChild(item);
+            });
+        }
+
+        function addActivity(text, type) {
+            activities.push({ text, type, time: new Date().toISOString() });
+            renderActivityFeed();
+            saveToStorage();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const validTypes = ['.xlsx', '.xls', '.csv', '.pdf', '.txt'];
+            const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            
+            if (!validTypes.some(type => fileExt.includes(type))) {
+                showNotification('Invalid file format', true);
+                return;
+            }
+            
+            // Simulate file parsing
+            setTimeout(() => {
+                simulateDataImport(file.name);
+            }, 1000);
+        }
+
+        function simulateDataImport(filename) {
+            const preview = document.getElementById('importPreview');
+            const header = document.getElementById('previewHeader');
+            const body = document.getElementById('previewBody');
+            
+            // Sample data
+            const sampleData = [
+                { day: 'Monday', time: '9:00', class: '12A', subject: 'Physics', teacher: 'Dr. Sharma', room: '305' },
+                { day: 'Monday', time: '10:00', class: '12B', subject: 'Chemistry', teacher: 'Mr. Kumar', room: '306' },
+                { day: 'Tuesday', time: '11:00', class: '11A', subject: 'Math', teacher: 'Dr. Reddy', room: '307' }
+            ];
+            
+            header.innerHTML = '<tr><th>Day</th><th>Time</th><th>Class</th><th>Subject</th><th>Teacher</th><th>Room</th></tr>';
+            body.innerHTML = '';
+            
+            sampleData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.day}</td>
+                    <td>${row.time}</td>
+                    <td>${row.class}</td>
+                    <td>${row.subject}</td>
+                    <td>${row.teacher}</td>
+                    <td>${row.room}</td>
+                `;
+                body.appendChild(tr);
+            });
+            
+            preview.style.display = 'block';
+            showNotification(`File "${filename}" uploaded successfully`);
+        }
+
+        function confirmImport() {
+            showNotification('Data imported successfully');
+            addActivity('Data imported from file', 'success');
+            cancelImport();
+        }
+
+        function cancelImport() {
+            document.getElementById('importPreview').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+        }
+
+        // Setup drag and drop for upload area
+        const uploadArea = document.getElementById('uploadArea');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.remove('dragover');
+            });
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFileUpload({ target: { files: files } });
+            }
+        });
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showNotification(text, isError = false) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = text;
+            notification.className = 'notification active';
+            if (isError) notification.classList.add('error');
+            
+            setTimeout(() => {
+                notification.classList.remove('active');
+            }, 3000);
+        }
+
+        function formatTime(time) {
+            const hour = parseInt(time.split(':')[0]);
+            return hour > 12 ? `${hour - 12}:00 PM` : `${hour}:00 AM`;
+        }
+
+        function formatDateTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: 'numeric', 
+                minute: 'numeric' 
+            });
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
